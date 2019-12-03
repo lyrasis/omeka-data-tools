@@ -1,0 +1,18 @@
+# base working directory for the project
+# full field list and collections list will be saved here
+# a subdirectory for each collection will be created in this directory
+wrk_dir: /opt/migrations/client/omeka
+
+# List base URLs of Omeka sites
+sites:
+ - https://site1.omeka.net
+ - https://site2.omeka.net
+
+# appended to each site to access its OAI-PMH repo
+oai_repo_suffix: /oai-pmh-repository/request
+
+# appended to each site to access GET functions of Omeka REST API
+api_suffix: /api
+
+# path to logfile
+logfile: /opt/migrations/client/omeka/omekatools.log

@@ -5,7 +5,7 @@
 self_load_path = File.expand_path('../lib', File.dirname(__FILE__))
 $LOAD_PATH << self_load_path unless $LOAD_PATH.include? self_load_path
 
-require 'omeka_tools'
+require 'omekatools'
 
-result = OmekaTools::CommandLine.start(ARGV)
+result = Omekatools::CommandLine.start(ARGV)
 

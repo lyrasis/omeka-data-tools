@@ -1,5 +1,5 @@
 require "bundler/setup"
-require "omeka_tools"
+require "omekatools"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

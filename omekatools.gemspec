@@ -1,16 +1,16 @@
 
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "omeka_tools/version"
+require "omekatools/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "omeka_tools"
-  spec.version       = OmekaTools::VERSION
+  spec.name          = "omekatools"
+  spec.version       = Omekatools::VERSION
   spec.authors       = ["Kristina Spurgin"]
   spec.email         = ["kristina.spurgin@lyrasis.org"]
 
   spec.summary       = 'Grab collection, item, file data from an Omeka OAI-PMH repo'
-  spec.homepage      = 'https://github.com/lyrasis/migration-miscellany/tree/master/omeka_tools'
+  spec.homepage      = 'https://github.com/lyrasis/migration-miscellany/tree/master/omekatools'
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
@@ -19,8 +19,8 @@ Gem::Specification.new do |spec|
     spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
 
     spec.metadata["homepage_uri"] = spec.homepage
-    spec.metadata["source_code_uri"] = 'https://github.com/lyrasis/migration-miscellany/tree/master/omeka_tools'
-    spec.metadata["changelog_uri"] = 'https://github.com/lyrasis/migration-miscellany/tree/master/omeka_tools'
+    spec.metadata["source_code_uri"] = 'https://github.com/lyrasis/migration-miscellany/tree/master/omekatools'
+    spec.metadata["changelog_uri"] = 'https://github.com/lyrasis/migration-miscellany/tree/master/omekatools'
   else
     raise "RubyGems 2.0 or newer is required to protect against " \
       "public gem pushes."
