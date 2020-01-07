@@ -12,7 +12,7 @@ module Omekatools
   class MigRecord < Record
     attr_reader :rec # the record as a JSON-derived hash
     attr_reader :fields # array of fields present in record
-    
+
     def initialize(site, path)
       super(site, path)
       @rec = JSON.parse(File.read(path))

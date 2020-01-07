@@ -33,9 +33,10 @@ module Omekatools
        when 'simple'
          @rec['migobjlevel'] = 'top'
          @rec['migobjcategory'] = 'simple'
-         opath = extract_obj_paths[0]
-         @rec['migfind'] = opath
-         @rec['migfiletype'] = get_file_type_from_obj_path(opath)
+         fileinfo = Omekatools::SimpleFileInfoGetter.new(@site.apiuri, @id)
+         Omekatools::Log.error("Cannot complete migrec for #{@site.name}/#{@id}") unless fileinfo.obj
+         @rec['migfind'] = fileinfo.obj if fileinfo.obj
+         @rec['migfiletype'] = fileinfo.origname.sub(/.*\./, '') if fileinfo.origname
 
        when 'metadata'
          @rec['migobjlevel'] = 'top'
@@ -64,13 +65,16 @@ module Omekatools
 
     def build_child_mig_rec(id, hash)
       child_rec = {}
-      @desc.each{ |k, v| child_rec[k] = v }
       child_rec['migptr'] = id
       child_rec['title'] = hash['title']
+      fileinfo = Omekatools::ChildFileInfoGetter.new(@site.apiuri, id)
+      Omekatools::Log.error("Cannot complete migrec for #{@site.name}/#{id}") unless fileinfo.obj
+      child_rec['identifier'] = fileinfo.origname if fileinfo.origname
+      child_rec['mimetype'] = fileinfo.mimetype if fileinfo.mimetype
       child_rec['migobjlevel'] = 'child'
       child_rec['migparentptr'] = @id
-      child_rec['migfind'] = hash['file']
-      child_rec['migfiletype'] = get_file_type_from_obj_path(hash['file'])
+      child_rec['migfind'] = fileinfo.obj if fileinfo.obj
+      child_rec['migfiletype'] = fileinfo.origname.sub(/.*\./, '') if fileinfo.origname
       write_rec("#{@site.migrecdir}/#{id}.json", child_rec)
     end
     
@@ -88,17 +92,7 @@ module Omekatools
       childdata
     end
 
-    def get_file_type_from_obj_path(str)
-      str = str.sub(/\?AWSAccessKeyId.*/,'')
-      str = str.sub(/^.*\./, '')
-      str
-    end
-    
     # returns array of S3 urls
-    def extract_obj_paths
-      @oxrec.xpath("/OAI-PMH/GetRecord/record/metadata/item/fileContainer/file/src").map{ |e| e.text }
-    end
-    
     def extract_desc_metadata
       h = {}
       desc_section = @oxrec.xpath("/OAI-PMH/GetRecord/record/metadata/item/elementSetContainer/elementSet[name='Dublin Core']/elementContainer/*")

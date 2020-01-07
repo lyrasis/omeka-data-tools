@@ -135,22 +135,6 @@ The fields added are:
       sites = get_sites
       sites.each { |site| site.make_mig_recs }
     end
-
-    desc 'get_field_data', 'converts omeka-xml records into JSON DC migration records'
-    long_desc <<-LONGDESC
-`exe/ot get_field_data` produces a csv file of the descriptive metadata fields used in item records for each site.
-
-This file is written to: `wrk_dir/_fields.csv` and lists the Omeka site, followed by the metadata field.
-
-The data in this file is appropriate for incorporating into metadata mapping documents.
-    LONGDESC
-    option :site, :desc => 'comma-separated list of site names to include in processing', :default => ''
-    def get_field_data
-      sites = get_sites
-      f = CSV.open("#{Omekatools::WRK_DIR}/_fields.csv", 'wb')
-      sites.each { |site| Omekatools::SiteFieldReporter.new(f, site) }
-      f.close
-    end
     
     desc 'chk_recs', 'testing'
     def chk_recs
