@@ -1,0 +1,86 @@
+= Omeka-data-tools
+
+Set of commands/tools to grab metadata and objects from one or more Omeka sites, using a combination of OAI-PMH and the Omeka API.
+
+These files are organized in such a way that the source-system-agnostic https://github.com/lyrasis/mdmm[MDMM] be used to further prepare them for migration.
+
+== Installation
+
+=== Dependencies
+
+- You will need Ruby
+- You will need a recent-ish version of bundler (`gem install bundler` will install if you don't have it, update it if you do)
+- You will need API access to whatever sites you are harvesting from
+
+=== Steps
+Clone this repo.
+
+`cd` into the resulting directory
+
+`bundle install`
+
+Copy `config/config.yaml.example` to `config/config.yaml` and edit the new file with your details. The example file is well-commented.
+
+== Usage
+
+For the available commands:
+
+`exe/ot help`
+
+For details on exactly what each command does:
+
+`exe/ot help [COMMAND]`
+
+*This command currently is the best documentation for each step.*
+
+=== Conceptual outline
+
+An Omeka migration will involve one or more Omeka sites.
+
+Each site may have collections. If a site does not have collections, everything from that site is treated as part of a default collection within the site.
+
+Each site has items. Items may be part of one collection or no collections.
+
+Items have may have one file, many files, or no files.
+
+Items with one file are treated as simple objects. Items with many files are treated as compound objects. Items with no files may be 'external media' objects, but this should be verified per site/client.
+
+:NOTE:
+----
+Each site may also contain exhibits, which build contextualizing content around items. We do not attempt to migrate exhibits.
+----
+
+`_oxrecords` contains the original Omeka-XML metadata downloaded for each item
+
+`_migrecords` contains the "migration records", or migrecords,  generated for each item. For items with one or no files, the migrecord reflects the item metadata and the file metadata (if available). For items with multiple files, one migrecord is created based on the item metadata. Then, an additional migrecord is created for each file/child, which combines key data from the parent record with data from the file record. Do `exe/ot help make_mig_recs` to see the details on how migrecords are generated.
+
+`_objects` contains the object files downloaded for each collection.
+
+https://github.com/lyrasis/mdmm[MDMM] expects collection directories containing `_migrecords` and `_objects` directories.
+
+
+=== Recommended initial order of commands for working with a new Omeka instance
+
+==== Data/metadata profiling
+
+- exe/ot get_coll_info
+- exe/ot get_ids
+- exe/ot get_recs
+- exe/ot make_mig_recs
+
+Please use `exe/ot help [COMMAND_NAME]` for more details and available options for each step.
+
+Check logfile for errors and warnings after each step.
+
+*Now you can use https://github.com/lyrasis/mdmm[MDMM] to handle data reporting, cleanup, and remapping.*
+
+==== Object data
+TODO
+
+== Contributing
+
+Bug reports and pull requests are welcome in https://github.com/lyrasis/cdmtools[the GitHub repo].
+
+== License
+
+The gem is available as open source under the terms of the https://opensource.org/licenses/MIT[MIT License].

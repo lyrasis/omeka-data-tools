@@ -46,9 +46,9 @@ module Omekatools
          @rec['migobjcategory'] = 'compound'
          child_data = get_child_data
          @rec['migchilddata'] = child_data
-         @rec['migchildptrs'] = child_data.keys
-         child_data.each{ |id, hash|
-           build_child_mig_rec(id, hash)
+         @rec['migchildptrs'] = child_data.keys.map{ |cid| "#{@id}-#{cid}" }
+         child_data.each{ |cid, hash|
+           build_child_mig_rec(cid, hash)
          }
        else
          puts "#{@site.name} #{id} - mig rec pending due to type: #{@objtype}"
@@ -63,19 +63,20 @@ module Omekatools
       }
     end
 
-    def build_child_mig_rec(id, hash)
+    def build_child_mig_rec(cid, hash)
       child_rec = {}
-      child_rec['migptr'] = id
+      file_id = "#{@id}-#{cid}"
+      child_rec['migptr'] = file_id
       child_rec['title'] = hash['title']
-      fileinfo = Omekatools::ChildFileInfoGetter.new(@site.apiuri, id)
-      Omekatools::Log.error("Cannot complete migrec for #{@site.name}/#{id}") unless fileinfo.obj
+      fileinfo = Omekatools::ChildFileInfoGetter.new(@site.apiuri, cid)
+      Omekatools::Log.error("Cannot complete migrec for #{@site.name}/#{cid}") unless fileinfo.obj
       child_rec['identifier'] = fileinfo.origname if fileinfo.origname
       child_rec['mimetype'] = fileinfo.mimetype if fileinfo.mimetype
       child_rec['migobjlevel'] = 'child'
       child_rec['migparentptr'] = @id
       child_rec['migfind'] = fileinfo.obj if fileinfo.obj
       child_rec['migfiletype'] = fileinfo.origname.sub(/.*\./, '') if fileinfo.origname
-      write_rec("#{@site.migrecdir}/#{id}.json", child_rec)
+      write_rec("#{@site.migrecdir}/#{file_id}.json", child_rec)
     end
     
     def get_child_data
