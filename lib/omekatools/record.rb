@@ -6,6 +6,7 @@ module Omekatools
 
     def initialize(site, path)
       @site = site
+      @path = path
     end
   end #Record class
 
@@ -14,10 +15,17 @@ module Omekatools
     attr_reader :fields # array of fields present in record
 
     def initialize(site, path)
-      super(site, path)
-      @rec = JSON.parse(File.read(path))
+      super
+      @rec = JSON.parse(File.read(@path))
       @fields = @rec.keys
     end
+
+    def write_record
+      File.open(@path, 'w'){ |f|
+        f.write(@rec.to_json)
+      }
+    end
+    
   end # MigRecord
 
   #Omeka-XML record 

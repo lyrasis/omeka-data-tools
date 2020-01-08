@@ -65,7 +65,7 @@ If _collections.json exists in a site directory, calling `get_coll_info` without
 If _collections.json does not exist for a site, an OAI request will generate it. 
     LONGDESC
     option :site, :desc => 'comma-separated list of site names to include in processing', :default => ''
-    option :force, :desc => 'boolean (true, false) - whether to force refresh of data', :default => false
+    option :force, :desc => 'boolean (true, false) - whether to force refresh of data', :default => 'false'
     def get_coll_info
       sites = get_sites
       sites.each { |site| site.process_colls(options[:force]) }
@@ -78,7 +78,7 @@ Saves a text file (tab-delimited) of all identifiers in a site. This needs to ha
 Writes `identifier\tspec/collection\tstatus` to a text file called `site_dir/_ids.txt`
     LONGDESC
     option :site, :desc => 'comma-separated list of site names to include in processing', :default => ''
-    option :force, :desc => 'boolean (true, false) - whether to force refresh of data', :default => false
+    option :force, :desc => 'boolean (true, false) - whether to force refresh of data', :default => 'false'
     def get_ids
       sites = get_sites
       sites.each { |site| site.get_identifiers(options[:force]) }
@@ -93,7 +93,7 @@ Records are saved in `site_dir/_oxrecords`.
 The file name for each record is its id (sans oai prefix and uri fragment used in formal OAI ID), with file suffix `.xml`
     LONGDESC
     option :site, :desc => 'comma-separated list of site names to include in processing', :default => ''
-    option :force, :desc => 'boolean (true, false) - whether to force refresh of data', :default => false
+    option :force, :desc => 'boolean (true, false) - whether to force refresh of data', :default => 'false'
     def get_recs
       sites = get_sites
       sites.each { |site| site.get_records(options[:force]) }
@@ -130,30 +130,31 @@ The fields added are:
     - migsource (source system: Omeka)
     LONGDESC
     option :site, :desc => 'comma-separated list of site names to include in processing', :default => ''
-    option :force, :desc => 'boolean (true, false) - whether to force refresh of data', :default => false
+    option :force, :desc => 'boolean (true, false) - whether to force refresh of data', :default => 'false'
     def make_mig_recs
       sites = get_sites
       sites.each { |site| site.make_mig_recs }
     end
-    
-    desc 'chk_recs', 'testing'
-    def chk_recs
-      recs = []
-      Omekatools::CONFIG.repos.each { |repo|
-        rec_dir = Dir.new(repo.rec_dir)
-        rec_dir.children.each{ |rf| recs << Omekatools::OxRecord.new(repo, "#{repo.rec_dir}/#{rf}") }
-      }
-      recs.each{ |r| puts "#{r.obj_type} - #{r.file_ct} files" }
+
+    desc 'print_object_hash', 'prints to screen the object hash -- for debugging'
+    option :site, :desc => 'comma-separated list of site names to include in processing', :default => ''
+    def print_object_hash
+      sites = get_sites
+      sites.each{ |site| site.print_object_hash }
     end
 
-    desc 'sum_recs', 'testing'
-    def sum_recs
-      recs = []
-      Omekatools::CONFIG.repos.each { |repo|
-        rec_dir = Dir.new(repo.rec_dir)
-        rec_dir.children.each{ |rf| recs << Omekatools::OxRecord.new(repo, "#{repo.rec_dir}/#{rf}") }
-      }
-      recs.each{ |r| puts "#{r.repo.name}\t#{r.id}\t#{r.obj_type}\t#{r.file_ct}" }
+    desc 'harvest_objects', 'download objects'
+    long_desc <<-LONGDESC
+`exe/ot harvest_objects` downloads objects. Works on both simple and compound child records.
+
+
+    LONGDESC
+    option :site, :desc => 'comma-separated list of site names to include in processing', :default => ''
+    option :force, :desc => 'boolean (true, false) - whether to force refresh of data', :default => 'false'
+    def harvest_objects
+      sites = get_sites
+      sites.each { |site| site.harvest_objects }
     end
+
   end
 end
