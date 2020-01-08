@@ -133,7 +133,7 @@ The fields added are:
     option :force, :desc => 'boolean (true, false) - whether to force refresh of data', :default => 'false'
     def make_mig_recs
       sites = get_sites
-      sites.each { |site| site.make_mig_recs }
+      sites.each { |site| site.make_mig_recs(options[:force]) }
     end
 
     desc 'print_object_hash', 'prints to screen the object hash -- for debugging'

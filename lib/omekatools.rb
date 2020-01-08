@@ -37,6 +37,7 @@ module Omekatools
   autoload :Record, 'omekatools/record'
 
   autoload :ObjectHarvester, 'omekatools/object_harvester'
+  autoload :OxrecordHarvester, 'omekatools/oxrecord_harvester'
   
   autoload :Repo, 'omekatools/repo'
 

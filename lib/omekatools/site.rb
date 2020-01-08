@@ -14,6 +14,7 @@ module Omekatools
     attr_reader :cleanrecdir # path to directory for transformed/cleaned migration records
     attr_reader :objdir
     attr_reader :id_file # path to text file of site ids
+    attr_reader :oxrecs #array of omeka-xml record filenames
     attr_reader :migrecs #array of migration record filenames
     attr_reader :objs_by_category
     attr_reader :simpleobjs
@@ -88,6 +89,7 @@ module Omekatools
       if File::exist?(@id_file) && force == 'false'
         Omekatools::LOG.info("Did not overwrite existing id file at #{@id_file}")
       else
+        File.delete(@id_file) if File::exist?(@id_file)
         client = OAI::Client.new(@oaiuri)
         # The following produces a temp full list you can only iterate over once without
         #  using resumption tokens
@@ -122,22 +124,33 @@ module Omekatools
         Omekatools::LOG.warn("There are no ids for repo #{@name}. Try running with 'get_ids' command first.")
         exit
       elsif get_rec_ct > 0 && force == 'false'
-        puts "You need to write code to compare number of IDs vs. number of existing records in order to get only the records you need."
-        exit
+        get_select_records(get_needed_ids)
       else
         get_all_records
       end
     end
 
-    def make_mig_recs
+    def make_mig_recs(force)
+      set_oxrecs
+      if force == 'true'
+        to_create = @oxrecs
+      else
+        set_migrecs
+        migrec_ids = @migrecs.map{ |filename| filename.sub('.json', '.xml') }
+        oxrec_ids = @oxrecs
+        to_create = oxrec_ids - migrec_ids
+      end
+
+      if to_create.length > 0
       progressbar = ProgressBar.create(:title => "Creating migrecords for #{@name}",
                                        :format => '%t : %a |%b>>%i| %p%%',
-                                       :total => Dir.children(@oxrecdir).length)
-      Dir.children(@oxrecdir).each{ |oxrec|
+                                       :total => to_create.length)
+      to_create.each{ |oxrec|
         Omekatools::OxRecord.new(self, "#{@oxrecdir}/#{oxrec}").make_mig_rec
         progressbar.increment
       }
       progressbar.finish
+      end
     end
 
     def set_migrecs
@@ -146,7 +159,17 @@ module Omekatools
         Omekatools::LOG.error("No records in #{@migrecdir}.")
         return
       else
-        Omekatools::LOG.info("Identified #{@migrecs.length} records for #{@alias}...")
+        Omekatools::LOG.info("Identified #{@migrecs.length} records for #{@name}...")
+      end
+    end
+
+    def set_oxrecs
+      @oxrecs = Dir.new(@oxrecdir).children
+      if @oxrecs.length == 0
+        Omekatools::LOG.error("No records in #{@oxrecdir}.")
+        return
+      else
+        Omekatools::LOG.debug("Identified #{@oxrecs.length} records for #{@name}...")
       end
     end
 
@@ -171,7 +194,7 @@ module Omekatools
 
     def print_object_hash
       create_objs_by_category
-      puts "\n\n#{@alias} - #{@name}"
+      puts "\n\n#{@name}"
       pp(@objs_by_category)
     end
 
@@ -203,11 +226,11 @@ module Omekatools
             @objs_by_category['compound'] << pointer            
           end
         when 'child'
-            if @objs_by_category['children'].has_key?(filetype)
-              @objs_by_category['children'][filetype] << pointer
-            else
-              @objs_by_category['children'][filetype] = [pointer]
-            end
+          if @objs_by_category['children'].has_key?(filetype)
+            @objs_by_category['children'][filetype] << pointer
+          else
+            @objs_by_category['children'][filetype] = [pointer]
+          end
         end
       }
       set_simpleobjs
@@ -243,36 +266,55 @@ module Omekatools
       progressbar = ProgressBar.create(:format => '%a |%b>>%i| %p%% %t', :autofinish => false, :total => ids.count)
 
       ids.each { |id|
-        uri = URI("#{@oaiuri}?verb=GetRecord&identifier=#{id}&metadataPrefix=omeka-xml")
-        result = Net::HTTP.get_response(uri)
-
-        case result
-        when Net::HTTPSuccess then
-          idpiece = id.sub(/^.*omeka\.net:/, '')
-          outfile = "#{@oxrecdir}/#{idpiece}.xml"
-          File.open(outfile, 'w'){ |f|
-            f.write(result.body)
-          }
-        else
-          Omekatools::LOG.error("Problem getting record: #{id} -- #{result.code} : #{result.message}")
-        end
-
+        Omekatools::OxrecordHarvester.new(@oaiuri, id, @oxrecdir)
         progressbar.increment
       }
       progressbar.finish
     end
-    
-    def get_id_ct
+
+    def get_select_records(ids)
+      puts "Getting #{ids.count} records for #{@name}..."
+      progressbar = ProgressBar.create(:format => '%a |%b>>%i| %p%% %t', :autofinish => false, :total => ids.count)
+
+      ids.each { |id|
+        Omekatools::OxrecordHarvester.new(@oaiuri, id, @oxrecdir)
+        progressbar.increment
+      }
+      progressbar.finish
+    end
+
+    def get_ids
       if File::exist?(@id_file)
-        return `wc -l #{@id_file}`.strip.split(' ')[0].to_i
+        ids = []
+        File.open(@id_file, 'r').each { |ln| ids << ln.split("\t")[0] }
+        return ids
       else
         puts "No id file for site: #{@name}. Run `exe/ot get_ids`"
         exit
       end
     end
 
+    def get_id_ct
+      if File::exist?(@id_file)
+        return get_ids.count
+      else
+        puts "No id file for site: #{@name}. Run `exe/ot get_ids`"
+        exit
+      end
+    end
+
+    def get_needed_ids
+      ids = get_ids
+      id_prefix = ids.first.sub(/:\d+$/, ':')
+      set_oxrecs
+      recids = @oxrecs.map{ |filename| id_prefix + filename.delete('.xml') }
+      puts @name
+      return ids - recids
+    end
+
     def get_rec_ct
-      Dir.children(@oxrecdir).count
+      set_oxrecs
+      @oxrecs.count
     end
     
     def rec_ct_equals_id_ct

@@ -36,7 +36,7 @@ module Omekatools
          fileinfo = Omekatools::SimpleFileInfoGetter.new(@site.apiuri, @id)
          Omekatools::Log.error("Cannot complete migrec for #{@site.name}/#{@id}") unless fileinfo.obj
          @rec['migfind'] = fileinfo.obj if fileinfo.obj
-         @rec['migfiletype'] = fileinfo.origname.sub(/.*\./, '') if fileinfo.origname
+         @rec['migfiletype'] = fileinfo.origname.sub(/.*\./, '').downcase if fileinfo.origname
 
        when 'metadata'
          @rec['migobjlevel'] = 'top'
@@ -75,7 +75,7 @@ module Omekatools
       child_rec['migobjlevel'] = 'child'
       child_rec['migparentptr'] = @id
       child_rec['migfind'] = fileinfo.obj if fileinfo.obj
-      child_rec['migfiletype'] = fileinfo.origname.sub(/.*\./, '') if fileinfo.origname
+      child_rec['migfiletype'] = fileinfo.origname.sub(/.*\./, '').downcase if fileinfo.origname
       write_rec("#{@site.migrecdir}/#{file_id}.json", child_rec)
     end
     
