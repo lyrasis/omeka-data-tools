@@ -16,6 +16,7 @@ module Omekatools
     attr_reader :id_file # path to text file of site ids
     attr_reader :oxrecs #array of omeka-xml record filenames
     attr_reader :migrecs #array of migration record filenames
+    attr_reader :cleanrecs #array of clean record filenames
     attr_reader :objs_by_category
     attr_reader :simpleobjs
     attr_reader :compoundobjs
@@ -153,6 +154,16 @@ module Omekatools
       end
     end
 
+    def set_cleanrecs
+      @cleanrecs = Dir.new(@cleanrecdir).children
+      if @cleanrecs.length == 0
+        Omekatools::LOG.error("No records in #{@cleanrecdir}.")
+        return
+      else
+        Omekatools::LOG.info("Identified #{@cleanrecs.length} records for #{@name}...")
+      end
+    end
+
     def set_migrecs
       @migrecs = Dir.new(@migrecdir).children
       if @migrecs.length == 0
@@ -198,13 +209,42 @@ module Omekatools
       pp(@objs_by_category)
     end
 
+    def report_object_stats
+      create_objs_by_category
+      puts "\n\n#{@name}"
+      puts "SIMPLE OBJECTS"
+      @objs_by_category.each{ |k, v|
+        unless k == 'compound' || k == 'children'
+          puts "  #{k}: #{v.length}" unless v.empty?
+        end
+      }
+      all_cpd = []
+      @objs_by_category['compound'].each{ |k, v|
+        all_cpd << v
+      }
+      all_cpd.flatten!
+      
+      puts "COMPOUND OBJECTS" unless all_cpd.empty?
+      
+      @objs_by_category['compound'].each{ |k, v|
+        unless v.empty?
+          puts "  #{k}: #{v.length}"
+          puts "    CHILD OBJECTS"
+          @objs_by_category['children'][k].each{ |ft, ptrs|
+            puts "      #{ft}: #{ptrs.length}"
+          }
+        end
+      }
+
+    end
+
     private
 
     def create_objs_by_category
       @objs_by_category = {
         'external media' => [],
-        'compound' => [],
-        'children' => {}
+        'compound' => {'compound' => []},
+        'children' => {'compound' => {}}
       }
       Dir.new(@migrecdir).children.each{ |recname|
         rec = JSON.parse(File.read("#{@migrecdir}/#{recname}"))
@@ -223,13 +263,13 @@ module Omekatools
           when 'external media'
             @objs_by_category['external media'] << pointer
           when 'compound'
-            @objs_by_category['compound'] << pointer            
+            @objs_by_category['compound']['compound'] << pointer            
           end
         when 'child'
-          if @objs_by_category['children'].has_key?(filetype)
-            @objs_by_category['children'][filetype] << pointer
+          if @objs_by_category['children']['compound'].has_key?(filetype)
+            @objs_by_category['children']['compound'][filetype] << pointer
           else
-            @objs_by_category['children'][filetype] = [pointer]
+            @objs_by_category['children']['compound'][filetype] = [pointer]
           end
         end
       }

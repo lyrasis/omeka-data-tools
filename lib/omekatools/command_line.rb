@@ -148,6 +148,13 @@ The fields added are:
       sites.each{ |site| site.print_object_hash }
     end
 
+    desc 'report_object_stats', 'prints to screen the number of number and type of objects in each collection'
+    option :site, :desc => 'comma-separated list of site names to include in processing', :default => ''
+    def report_object_stats
+      sites = get_sites
+      sites.each{ |site| site.report_object_stats }
+    end
+    
     desc 'harvest_objects', 'download objects'
     long_desc <<-LONGDESC
 `exe/ot harvest_objects` downloads objects. Works on both simple and compound child records.
