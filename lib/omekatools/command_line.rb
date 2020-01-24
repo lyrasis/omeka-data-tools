@@ -2,6 +2,11 @@ require 'omekatools'
 
 module Omekatools
   class CommandLine < Thor
+    def initialize(*args)
+      super(*args)
+      Omekatools.const_set('CONFIG', Omekatools::ConfigReader.new(config: options[:config]))
+    end
+
     no_commands{
       def get_sites
         sites = CONFIG.sites.map{ |s| Omekatools::Site.new(s) }
@@ -27,23 +32,23 @@ module Omekatools
         end
       end #def get_sites
     }
-    
+
+    class_option :config,
+      desc: 'Path to YAML config file. If not specified, uses default value',
+      type: 'string',
+      default: 'config/config.yaml',
+      aliases: '-c'
+
     map %w[--version -v] => :__version
     desc '--version, -v', 'print the version'
     def __version
       puts "Omeka Data Tools version #{Omekatools::VERSION}, installed #{File.mtime(__FILE__)}"
     end
 
-    map %w[--config -c] => :__config
-    desc '--config, -c', 'print out your config settings, including list of site names'
-    def __config
-      puts "\nYour project working directory:"
-      puts Omekatools::WRK_DIR
-      puts "\nYour Omeka sites:"
-      Omekatools::CONFIG.sites.each { |s|
-        site = Omekatools::Site.new(s)
-        puts site.name
-      }
+    map %w[--show_config -s] => :__show_config
+    desc '--show_config, -s', 'print out your config settings, including list of site names'
+    def __show_config
+      pp(Omekatools::CONFIG)
     end
     
     desc 'get_coll_info', 'get collection info per site, build coll dirs, save metadata'

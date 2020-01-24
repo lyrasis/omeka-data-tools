@@ -8,8 +8,9 @@ module Omekatools
     attr_reader :apisuffix
     attr_reader :logfile
 
-    def initialize
-      config = YAML.load_file('config/config.yaml')
+    def initialize(configpath = 'config/config.yaml')
+      @path = configpath.is_a?(String) ? configpath : configpath[:config]
+      config = YAML.load_file(File.expand_path(@path))
       @wrk_dir = config['wrk_dir']
       @logfile = config['logfile']
       @oaisuffix = config['oai_repo_suffix']
@@ -17,6 +18,4 @@ module Omekatools
       @sites = config['sites']
     end
   end
-
-  CONFIG = Omekatools::ConfigReader.new
 end

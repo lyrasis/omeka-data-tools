@@ -14,7 +14,8 @@ require 'thor'
 
 module Omekatools
   autoload :VERSION, 'omekatools/version'
-  autoload :CONFIG, 'omekatools/config_reader'
+  autoload :ConfigReader, 'omekatools/config_reader'
+
   autoload :LOG, 'omekatools/log'
   # silly way to make Omekatools::WRK_DIR act like a global variable
   autoload :WRK_DIR, 'omekatools/wrk_dir'
@@ -23,7 +24,6 @@ module Omekatools
   
   autoload :CommandLine, 'omekatools/command_line'
 
-  autoload :ConfigReader, 'omekatools/config_reader'
 
   autoload :FileInfoGetter, 'omekatools/file_info_getter'
   autoload :ChildFileInfoGetter, 'omekatools/file_info_getter'
