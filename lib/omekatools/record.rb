@@ -34,6 +34,7 @@ module Omekatools
     attr_reader :doc # Nokogiri XML document, with namespaces removed
     attr_reader :file_ct # Count of associated files
     attr_reader :obj_type # metadata (no files); simple (1 file); compound (>1 files)
+    attr_reader :set_spec #set/collection id number
 
     def initialize(site, path)
       super(site, path)
@@ -41,6 +42,7 @@ module Omekatools
       @doc = Nokogiri::XML(File.open(path)).remove_namespaces!
       @file_ct = count_files
       @obj_type = get_obj_type
+      @set_spec = @doc.xpath("/OAI-PMH/GetRecord/record/header/setSpec").text
     end
 
     def make_mig_rec
