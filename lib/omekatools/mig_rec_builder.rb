@@ -28,7 +28,7 @@ module Omekatools
       @desc = extract_desc_metadata
       @desc.each{ |k, v| @rec[k] = v }
       @rec['migptr'] = @id
-      
+      @rec['migcollectionset'] = @oxrec.set_spec unless @oxrec.set_spec.empty?
        case @objtype
        when 'simple'
          @rec['migobjlevel'] = 'top'
@@ -37,7 +37,6 @@ module Omekatools
          Omekatools::Log.error("Cannot complete migrec for #{@site.name}/#{@id}") unless fileinfo.obj
          @rec['migfind'] = fileinfo.obj if fileinfo.obj
          @rec['migfiletype'] = fileinfo.origname.sub(/.*\./, '').downcase if fileinfo.origname
-
        when 'metadata'
          @rec['migobjlevel'] = 'top'
          @rec['migobjcategory'] = 'metadata'
@@ -67,6 +66,7 @@ module Omekatools
       child_rec = {}
       file_id = "#{@id}-#{cid}"
       child_rec['migptr'] = file_id
+      child_rec['migcollectionset'] = @rec['migcollectionset'] if @rec['migcollectionset']
       child_rec['title'] = hash['title']
       fileinfo = Omekatools::ChildFileInfoGetter.new(@site.apiuri, cid)
       Omekatools::Log.error("Cannot complete migrec for #{@site.name}/#{cid}") unless fileinfo.obj

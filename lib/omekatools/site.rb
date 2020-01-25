@@ -21,6 +21,7 @@ module Omekatools
     attr_reader :simpleobjs
     attr_reader :compoundobjs
     attr_reader :compoundchildren
+    attr_reader :externalmedia
     
     def initialize(siteuri)
       @name = siteuri.sub(/^https?:\/\//,'').sub(/\..*$/,'')
@@ -154,6 +155,42 @@ module Omekatools
       end
     end
 
+    def add_setspec_to_migrecs
+      create_objs_by_category
+      doobjs = @simpleobjs + @compoundobjs + @externalmedia
+      doobjs.each{ |id|
+        Omekatools::LOG.debug("ADD_SETSPEC: Checking #{@name}/#{id} for set spec")
+        oxrec = Nokogiri::XML(File.open("#{@oxrecdir}/#{id}.xml")).remove_namespaces!
+        setspec = oxrec.xpath("/OAI-PMH/GetRecord/record/header/setSpec").text
+        Omekatools::LOG.debug("ADD_SETSPEC: #{@name}/#{id}: setspec = #{setspec}")
+        unless setspec.empty?
+          update_migrec_with_set(id, setspec)
+        end
+      }
+      
+      @compoundchildren.each{ |id|
+          Omekatools::LOG.debug("ADD_SETSPEC: Checking #{@name}/#{id} for set spec")
+          update_child_migrec_with_set(id)
+        }
+    end
+
+    def update_migrec_with_set(recid, setspec)
+      recpath = "#{@migrecdir}/#{recid}.json"
+      migrec = JSON.parse(File.read(recpath))
+      migrec['migcollectionset'] = setspec
+      File.open(recpath, 'w'){ |f| f.write(migrec.to_json) }
+      Omekatools::LOG.debug("ADD_SETSPEC: Wrote migcollectionset field to #{@name}/#{recid}")
+    end
+
+    def update_child_migrec_with_set(recid)
+      childrecpath = "#{@migrecdir}/#{recid}.json"
+      childmigrec = JSON.parse(File.read(childrecpath))
+      parentrecpath = "#{@migrecdir}/#{childmigrec['migparentptr']}.json"
+      parentmigrec = JSON.parse(File.read(parentrecpath))
+      setspec = parentmigrec['migcollectionset']
+      update_migrec_with_set(recid, setspec) if setspec
+    end
+    
     def set_cleanrecs
       @cleanrecs = Dir.new(@cleanrecdir).children
       if @cleanrecs.length == 0
@@ -276,15 +313,20 @@ module Omekatools
       set_simpleobjs
       set_compoundobjs
       set_compoundchildren
+      set_externalmedia
     end
 
+    def set_externalmedia
+      @externalmedia = @objs_by_category['external media']
+    end
+    
     def set_compoundobjs
-      @compoundobjs = @objs_by_category['compound']
+      @compoundobjs = @objs_by_category['compound']['compound']
     end
 
     def set_compoundchildren
       pointers = []
-      @objs_by_category['children'].each{ |filetype, ptrs| pointers << ptrs }
+      @objs_by_category['children']['compound'].each{ |filetype, ptrs| pointers << ptrs }
       @compoundchildren = pointers.flatten
     end
 
