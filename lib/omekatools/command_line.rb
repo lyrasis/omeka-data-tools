@@ -159,12 +159,23 @@ The fields added are:
     desc 'add_setspec_to_migrecs', 'adds `migcollectionset` field to migrecs'
     long_desc <<-LONGDESC
 `exe/ot add_setspec_to_migrecs` adds adds `migcollectionset` field based on oxrecs to migrecs.
-This is probably not needed going forward, as this has been build into the initial building of migrecs.
+This is probably not needed going forward, as this has been built into the initial building of migrecs.
     LONGDESC
     option :site, :desc => 'comma-separated list of site names to include in processing', :default => ''
     def add_setspec_to_migrecs
       sites = get_sites
       sites.each{ |site| site.add_setspec_to_migrecs }
+    end
+
+    desc 'get_metadata_only_links', 'adds `migcollectionset` field to migrecs'
+    long_desc <<-LONGDESC
+`exe/ot get_metadata_only_links` adds adds `externalmedialink` field from oxrecs to migrecs.
+This is probably not needed going forward, as this has been built into the initial building of migrecs.
+    LONGDESC
+    option :site, :desc => 'comma-separated list of site names to include in processing', :default => ''
+    def get_metadata_only_links
+      sites = get_sites
+      sites.each{ |site| site.get_metadata_only_links }
     end
 
     desc 'harvest_objects', 'download objects'

@@ -190,6 +190,27 @@ module Omekatools
       setspec = parentmigrec['migcollectionset']
       update_migrec_with_set(recid, setspec) if setspec
     end
+
+    def get_metadata_only_links
+      create_objs_by_category
+      unless @objs_by_category['metadata only'].empty?
+        @objs_by_category['metadata only'].each{ |recid|
+          oxrec = Nokogiri::XML(File.open("#{@oxrecdir}/#{recid}.xml")).remove_namespaces!
+          type = oxrec.xpath("/OAI-PMH/GetRecord/record/metadata/item/itemType/name").text
+          if type && type == 'Hyperlink'
+            urlcode = oxrec.xpath("/OAI-PMH/GetRecord/record/metadata/item/itemType/elementContainer/element/elementTextContainer/elementText/text").text
+            url = urlcode.match(/href="(http.*?)"/)[1] if urlcode
+            if url
+          recpath = "#{@migrecdir}/#{recid}.json"
+          migrec = JSON.parse(File.read(recpath))
+          migrec['externalmedialink'] = url
+          File.open(recpath, 'w'){ |f| f.write(migrec.to_json) }
+          Omekatools::LOG.debug("METADATA_ONLY_LINKS: Wrote externalmedialink field to #{@name}/#{recid}")
+            end
+          end
+        }
+      end
+    end
     
     def set_cleanrecs
       @cleanrecs = Dir.new(@cleanrecdir).children
@@ -280,6 +301,7 @@ module Omekatools
     def create_objs_by_category
       @objs_by_category = {
         'external media' => [],
+        'metadata only' => [],
         'compound' => {'compound' => []},
         'children' => {'compound' => {}}
       }
@@ -297,6 +319,8 @@ module Omekatools
             else
               @objs_by_category[filetype] = [pointer]
             end
+          when 'metadata'
+            @objs_by_category['metadata only'] << pointer
           when 'external media'
             @objs_by_category['external media'] << pointer
           when 'compound'
