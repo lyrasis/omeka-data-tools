@@ -167,9 +167,19 @@ This is probably not needed going forward, as this has been built into the initi
       sites.each{ |site| site.add_setspec_to_migrecs }
     end
 
+    desc 'add_islandora_content_model_to_migrecs', 'adds `islandora_content_model` field to migrecs'
+    long_desc <<-LONGDESC
+`exe/ot add_islandora_content_model_to_migrecs` adds adds `islandora_content_model` field based on combination of other fields to migrecs.
+    LONGDESC
+    option :site, :desc => 'comma-separated list of site names to include in processing', :default => ''
+    def add_islandora_content_model_to_migrecs
+      sites = get_sites
+      sites.each{ |site| site.add_islandora_content_model_to_migrecs }
+    end
+
     desc 'get_metadata_only_links', 'adds `migcollectionset` field to migrecs'
     long_desc <<-LONGDESC
-`exe/ot get_metadata_only_links` adds adds `externalmedialink` field from oxrecs to migrecs.
+`exe/ot get_metadata_only_links` adds `externalmedialink` field from oxrecs to migrecs.
 This is probably not needed going forward, as this has been built into the initial building of migrecs.
     LONGDESC
     option :site, :desc => 'comma-separated list of site names to include in processing', :default => ''

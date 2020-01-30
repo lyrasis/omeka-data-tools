@@ -25,6 +25,51 @@ module Omekatools
         f.write(@rec.to_json)
       }
     end
+
+    def finalize
+      set_islandora_content_model
+      write_record
+    end
+
+    def set_islandora_content_model
+      case @rec['migobjlevel']
+      when 'top'
+        case @rec['migobjcategory']
+        when 'simple'
+          icm = content_model(@rec['migfiletype'].downcase) if @rec['migfiletype']
+        when 'external media'
+          icm = 'sp_basic_image'
+        when 'compound'
+          if @rec['type'] && @rec['type'].downcase['text']
+            icm = 'bookCModel'
+          else
+            icm = 'compoundCModel'
+          end
+        end
+        
+        if icm
+          @rec['islandora_content_model'] = icm
+        else
+          Omekatools::LOG.warn("IS_CONTENT_MODEL: Cannot determine content model for #{@path}")
+        end
+      end
+    end
+
+    def content_model(file_ext)
+      lookup = {
+        'jp2' => 'sp_large_image_cmodel',
+        'jpg' => 'sp_basic_image',
+        'mov' => 'sp_videoCModel',
+        'pdf' => 'sp_pdf',
+        'tif' => 'sp_large_image_cmodel',
+      }
+      if lookup.has_key?(file_ext)
+        return lookup[file_ext]
+      else
+        Omekatools::LOG.warn("Cannot determine Islandora content model for filetype: #{file_ext}")
+        puts "Cannot determine Islandora content model for filetype: #{file_ext}"
+      end
+    end
     
   end # MigRecord
 

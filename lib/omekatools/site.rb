@@ -155,6 +155,16 @@ module Omekatools
       end
     end
 
+    def add_islandora_content_model_to_migrecs
+      create_objs_by_category
+      doobjs = @simpleobjs + @compoundobjs + @externalmedia
+      doobjs.each{ |id|
+        recpath = "#{@migrecdir}/#{id}.json"
+        rec = Omekatools::MigRecord.new(self, recpath)
+        rec.finalize
+      }
+    end
+    
     def add_setspec_to_migrecs
       create_objs_by_category
       doobjs = @simpleobjs + @compoundobjs + @externalmedia
